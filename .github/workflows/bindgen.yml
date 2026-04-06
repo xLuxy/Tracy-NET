@@ -1,114 +1,129 @@
-name: "Bindgen"
+name: 'Bindgen'
 
 on:
   workflow_call:
 
 jobs:
   bindgen-ast-job:
-    name: "Bindgen AST"
+    name: 'Bindgen AST'
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
         platform:
           - { name: Windows, os: windows-2022, rid: win }
-          - { name: macOS, os: macos-13, rid: osx }
-          - { name: Linux, os: ubuntu-20.04, rid: linux }
+          - { name: macOS, os: macos-26, rid: osx }
+          - { name: Linux, os: ubuntu-24.04, rid: linux }
 
     steps:
-      - name: "Clone Git repository"
-        uses: actions/checkout@v2
+      - name: 'Clone Git repository'
+        uses: actions/checkout@v4
         with:
-          submodules: "true"
+          submodules: 'true'
 
-      - name: "Install CAstFfi"
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: 'Install CAstFfi'
         shell: bash
         run: dotnet tool install --global bottlenoselabs.CAstFfi.Tool
 
-      - name: "Read C code: Linux dependencies"
+      - name: 'Read C code: Linux dependencies'
         if: runner.os == 'Linux'
-        run: sudo apt-get install gcc-aarch64-linux-gnu
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
 
-      - name: "Read C code: extract ${{ matrix.platform.rid }}"
+      - name: 'Read C code: extract ${{ matrix.platform.rid }}'
         shell: bash
         run: cd ./bindgen && ./extract.sh
 
-      - name: "Upload C code platform abstract syntax trees"
+      - name: 'Upload C code platform abstract syntax trees'
         uses: actions/upload-artifact@v4
         with:
-          name: "ast-${{ matrix.platform.rid }}"
-          path: "./bindgen/ast"
+          name: 'ast-${{ matrix.platform.rid }}'
+          path: './bindgen/ast'
 
   bindgen-cross-platform-ast-job:
-    name: "Bindgen AST cross-platform"
+    name: 'Bindgen AST cross-platform'
     needs: [bindgen-ast-job]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
-      - name: "Clone Git repository"
-        uses: actions/checkout@v2
+      - name: 'Clone Git repository'
+        uses: actions/checkout@v4
         with:
-          submodules: "false"
+          submodules: 'false'
 
-      - name: "Download C code platform abstract syntax trees (win)"
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: 'Download C code platform abstract syntax trees (win)'
         uses: actions/download-artifact@v4
         with:
-          name: "ast-win"
-          path: "./bindgen/ast"
+          name: 'ast-win'
+          path: './bindgen/ast'
 
-      - name: "Download C code platform abstract syntax trees (osx)"
+      - name: 'Download C code platform abstract syntax trees (osx)'
         uses: actions/download-artifact@v4
         with:
-          name: "ast-osx"
-          path: "./bindgen/ast"
+          name: 'ast-osx'
+          path: './bindgen/ast'
 
-      - name: "Download C code platform abstract syntax trees (linux)"
+      - name: 'Download C code platform abstract syntax trees (linux)'
         uses: actions/download-artifact@v4
         with:
-          name: "ast-linux"
-          path: "./bindgen/ast"
+          name: 'ast-linux'
+          path: './bindgen/ast'
 
-      - name: "Install CAstFfi"
+      - name: 'Install CAstFfi'
         shell: bash
         run: dotnet tool install --global bottlenoselabs.CAstFfi.Tool
 
-      - name: "Generate cross-platform AST"
+      - name: 'Generate cross-platform AST'
         shell: bash
         run: cd ./bindgen && ./merge.sh
 
-      - name: "Upload cross-platform AST"
+      - name: 'Upload cross-platform AST'
         uses: actions/upload-artifact@v4
         with:
-          name: "ast-cross-platform"
-          path: "./bindgen/x-ast/ast-cross-platform.json"
+          name: 'ast-cross-platform'
+          path: './bindgen/x-ast/ast-cross-platform.json'
 
   bindgen-cs-job:
-    name: "Bindgen C#"
+    name: 'Bindgen C#'
     needs: [bindgen-cross-platform-ast-job]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
-      - name: "Clone Git repository"
-        uses: actions/checkout@v2
+      - name: 'Clone Git repository'
+        uses: actions/checkout@v4
         with:
-          submodules: "false"
+          submodules: 'false'
 
-      - name: "Download C code cross-platform abstract syntax tree"
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: 'Download C code cross-platform abstract syntax tree'
         uses: actions/download-artifact@v4
         with:
-          name: "ast-cross-platform"
-          path: "./bindgen/x-ast"
+          name: 'ast-cross-platform'
+          path: './bindgen/x-ast'
 
-      - name: "Install C2CS"
+      - name: 'Install C2CS'
         shell: bash
         run: dotnet tool install --global bottlenoselabs.C2CS.Tool
 
-      - name: "Generate C# code"
+      - name: 'Generate C# code'
         shell: bash
         run: cd ./bindgen && ./generate.sh
 
-      - name: "Upload generated C# code"
+      - name: 'Upload generated C# code'
         uses: actions/upload-artifact@v4
         with:
-          name: "bindgen-cs"
-          path: "./src/cs/production/Tracy/Generated"
+          name: 'bindgen-cs'
+          path: './src/cs/production/Tracy/Generated'

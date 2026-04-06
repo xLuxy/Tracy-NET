@@ -34,18 +34,18 @@ public static class Profiler
     /// </param>
     /// <returns></returns>
     public static ProfilerZone BeginZone(
-        string zoneName = null,
+        string? zoneName = null,
         bool active = true,
         uint color = 0,
-        string text = null,
-        [CallerLineNumber] uint lineNumber = 0,
-        [CallerFilePath] string filePath = null,
-        [CallerMemberName] string memberName = null)
+        string? text = null,
+        [CallerLineNumber] int lineNumber = 0,
+        [CallerFilePath] string? filePath = null,
+        [CallerMemberName] string? memberName = null)
     {
         using var filestr = GetCString(filePath, out var fileln);
         using var memberstr = GetCString(memberName, out var memberln);
         using var namestr = GetCString(zoneName, out var nameln);
-        var srcLocId = TracyAllocSrclocName(lineNumber, filestr, fileln, memberstr, memberln, namestr, nameln, color);
+        var srcLocId = TracyAllocSrclocName((uint)lineNumber, filestr, fileln, memberstr, memberln, namestr, nameln, color);
         var context = TracyEmitZoneBeginAlloc(srcLocId, active ? 1 : 0);
 
         if (text != null)

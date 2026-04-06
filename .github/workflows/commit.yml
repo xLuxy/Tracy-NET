@@ -1,4 +1,4 @@
-name: "Commit generated C# code"
+name: 'Commit generated C# code'
 
 on:
   workflow_call:
@@ -7,25 +7,30 @@ permissions: write-all
 
 jobs:
   commit-job:
-    name: "Commit generated C# code"
-    runs-on: ubuntu-20.04
+    name: 'Commit generated C# code'
+    runs-on: ubuntu-24.04
     if: github.actor == 'dependabot[bot]'
 
     steps:
-      - name: "Clone Git repository"
+      - name: 'Clone Git repository'
         uses: actions/checkout@v2
         with:
-          submodules: "true"
+          submodules: 'true'
 
-      - name: "Download changes to commit"
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: 'Download changes to commit'
         uses: actions/download-artifact@v4
         with:
-          name: "bindgen-cs"
-          path: "./src/cs/production/Tracy/Generated"
+          name: 'bindgen-cs'
+          path: './src/cs/production/Tracy/Generated'
 
-      - name: "Add + commit + push (if necessary)"
+      - name: 'Add + commit + push (if necessary)'
         uses: EndBug/add-and-commit@v7
         with:
-          author_name: "clibequilibrium"
-          author_email: "clibequilibrium@users.noreply.github.com"
-          message: "Update C# bindings"
+          author_name: 'clibequilibrium'
+          author_email: 'clibequilibrium@users.noreply.github.com'
+          message: 'Update C# bindings'

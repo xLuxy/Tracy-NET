@@ -1,5 +1,6 @@
-# Tracy-CSharp
-
+# Tracy-Net
+#### (This is a fork of [Tracy-CSharp](https://github.com/clibequilibrium/Tracy-CSharp) adding support for v0.13.1)
+___
 C# bindings for https://github.com/wolfpld/tracy with native dynamic link libraries based on [`imgui-cs`](https://github.com/bottlenoselabs/imgui-cs).
 
 ## How to use
